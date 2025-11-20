@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторная работа №2 - Автоматизация</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --light: #ecf0f1;
+            --border: #bdc3c7;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 { color: var(--primary); }
+        h1 { text-align: center; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            background-color: #fff;
+        }
+        .section h3 { margin-top: 0; border-bottom: 2px solid var(--accent); padding-bottom: 10px; display: inline-block; }
+        
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .input-group label { font-weight: bold; flex: 1; min-width: 200px; }
+        .input-group input {
+            flex: 0 0 150px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+        .input-group span.hint {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-left: 10px;
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: center;
+        }
+        th { background-color: var(--light); }
+        .calc-res { font-weight: bold; color: var(--accent); }
+        .error-val { color: #e74c3c; }
+        .pass { color: #27ae60; font-weight: bold; }
+        .fail { color: #c0392b; font-weight: bold; }
+
+        .btn-print {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn-print:hover { background-color: #34495e; }
+
+        /* Стили для отчета (скрыть формы, показать только таблицы) */
+        @media print {
+            body { background-color: #fff; padding: 0; }
+            .container { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
+            .no-print, .input-group, button, .hint { display: none !important; }
+            .section { border: none; padding: 0; margin-bottom: 20px; }
+            input { border: none; background: transparent; font-weight: bold; text-align: center; padding: 0; width: auto; }
+            .calc-res { color: #000; }
+            h1 { font-size: 18pt; }
+            h3 { font-size: 14pt; border-bottom: 1px solid #000; }
+            table { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Лабораторная работа №2</h1>
+    <div class="subtitle">Измерение линейных размеров штангенциркулем</div>
+    
+    <div class="no-print" style="background: #e8f6f3; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #1abc9c;">
+        <strong>Инструкция:</strong> Заполняйте белые поля вашими измерениями. Программа автоматически рассчитает все погрешности, заполнит таблицы и сделает выводы.
+    </div>
+
+    <!-- Раздел 1: Характеристика -->
+    <div class="section">
+        <h3>1. Характеристика штангенциркуля</h3>
+        <div class="input-group no-print">
+            <label>Пределы измерений (мм):</label>
+            <input type="text" id="rangeInput" value="0 - 125" placeholder="Например: 0 - 125">
+        </div>
+        <div class="input-group no-print">
+            <label>Цена деления нониуса (мм):</label>
+            <input type="number" id="precisionInput" value="0.1" step="0.05">
+        </div>
+
+        <table>
+            <tr>
+                <td style="text-align: left;">Пределы измерения размеров</td>
+                <td><span id="outRange">0 - 125</span> мм</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Цена деления шкалы нониуса</td>
+                <td><span id="outPrecision">0.1</span> мм</td>
+            </tr>
+            <!-- Остальные поля часто стандартные, можно оставить пустыми или заполнить вручную на печати -->
+            <tr>
+                <td style="text-align: left;">Цена деления основной шкалы</td>
+                <td>1 мм</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Раздел 2: Поверка -->
+    <div class="section">
+        <h3>2. Поверка штангенциркуля</h3>
+        <p class="no-print">Введите размеры эталонных плиток (Мер) и то, что показал прибор.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Размер меры (M), мм</th>
+                    <th>Измеренный размер (Mr), мм</th>
+                    <th>Погрешность (Mr - M), мм</th>
+                    <th>Допускаемая погр. (±E), мм</th>
+                    <th>Вывод</th>
+                </tr>
+            </thead>
+            <tbody id="verifyTable">
+                <!-- Строка 1 -->
+                <tr>
+                    <td><input type="number" class="verify-m" step="0.01" value="1.05"></td>
+                    <td><input type="number" class="verify-mr" step="0.01"></td>
+                    <td><span class="verify-diff calc-res">-</span></td>
+                    <td><span class="verify-tol">±<span class="tol-val">0.1</span></span></td>
+                    <td><span class="verify-res">-</span></td>
+                </tr>
+                <!-- Строка 2 -->
+                <tr>
+                    <td><input type="number" class="verify-m" step="0.01" value="3.5"></td>
+                    <td><input type="number" class="verify-mr" step="0.01"></td>
+                    <td><span class="verify-diff calc-res">-</span></td>
+                    <td><span class="verify-tol">±<span class="tol-val">0.1</span></span></td>
+                    <td><span class="verify-res">-</span></td>
+                </tr>
+                <!-- Строка 3 -->
+                <tr>
+                    <td><input type="number" class="verify-m" step="0.01" value="7.0"></td>
+                    <td><input type="number" class="verify-mr" step="0.01"></td>
+                    <td><span class="verify-diff calc-res">-</span></td>
+                    <td><span class="verify-tol">±<span class="tol-val">0.1</span></span></td>
+                    <td><span class="verify-res">-</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Раздел 3: Результаты измерений детали -->
+    <div class="section">
+        <h3>3. Результаты измерений детали</h3>
+        <div class="input-group no-print">
+            <label>Допуск размера (TZ) для IT9:</label>
+            <input type="number" id="tzInput" value="0.052" step="0.001">
+            <span class="hint">Обычно 0.052 мм для размеров ~30мм</span>
+        </div>
+
+        <table id="measureTable">
+            <thead>
+                <tr>
+                    <th>Размер</th>
+                    <th>Результат (Zr), мм</th>
+                    <th>Номинал (Z), мм</th>
+                    <th>Погрешность (Zr - Z), мм</th>
+                    <th>Допуск (TZ), мм</th>
+                    <th>Вывод (Годен?)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- B -->
+                <tr>
+                    <td><b>B</b></td>
+                    <td><input type="number" class="meas-zr" data-id="B" step="0.05"></td>
+                    <td><span class="meas-z calc-res">-</span></td>
+                    <td><span class="meas-diff calc-res">-</span></td>
+                    <td rowspan="6" style="vertical-align: middle;"><span id="outTZ">0.052</span></td>
+                    <td><span class="meas-res">-</span></td>
+                </tr>
+                <!-- C -->
+                <tr>
+                    <td><b>C</b></td>
+                    <td><input type="number" class="meas-zr" data-id="C" step="0.05"></td>
+                    <td><span class="meas-z calc-res">-</span></td>
+                    <td><span class="meas-diff calc-res">-</span></td>
+                    <td><span class="meas-res">-</span></td>
+                </tr>
+                <!-- D1 -->
+                <tr>
+                    <td><b>D1</b></td>
+                    <td><input type="number" class="meas-zr" id="inpD1" step="0.05"></td>
+                    <td><span class="meas-z calc-res">-</span></td>
+                    <td><span class="meas-diff calc-res">-</span></td>
+                    <td><span class="meas-res">-</span></td>
+                </tr>
+                <!-- D2 -->
+                <tr>
+                    <td><b>D2</b></td>
+                    <td><input type="number" class="meas-zr" id="inpD2" step="0.05"></td>
+                    <td><span class="meas-z calc-res">-</span></td>
+                    <td><span class="meas-diff calc-res">-</span></td>
+                    <td><span class="meas-res">-</span></td>
+                </tr>
+                <!-- F -->
+                <tr>
+                    <td><b>F</b></td>
+                    <td><input type="number" class="meas-zr" id="inpF" step="0.05"></td>
+                    <td><span class="meas-z calc-res">-</span></td>
+                    <td><span class="meas-diff calc-res">-</span></td>
+                    <td><span class="meas-res">-</span></td>
+                </tr>
+                <!-- G -->
+                <tr>
+                    <td><b>G</b></td>
+                    <td><input type="number" class="meas-zr" id="inpG" step="0.05"></td>
+                    <td><span class="meas-z calc-res">-</span></td>
+                    <td><span class="meas-diff calc-res">-</span></td>
+                    <td><span class="meas-res">-</span></td>
+                </tr>
+                <!-- Расчетные A -->
+                <tr style="background-color: #f9f9f9;">
+                    <td><i>A'</i> (через F)</td>
+                    <td colspan="5" style="text-align: left; padding-left: 20px;">
+                        A' = F - (D1+D2)/2 = <span id="outA1" class="calc-res">-</span>
+                    </td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                    <td><i>A''</i> (через G)</td>
+                    <td colspan="5" style="text-align: left; padding-left: 20px;">
+                        A'' = G + (D1+D2)/2 = <span id="outA2" class="calc-res">-</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Раздел 4: Анализ размера А -->
+    <div class="section">
+        <h3>4. Анализ результатов измерений размера А</h3>
+        <p class="no-print">Расчет теоретической погрешности из-за плоскостности губок (толщина b = 3.5 мм).</p>
+        
+        <table>
+            <tr>
+                <td style="text-align: left; width: 60%;">Теоретическая погрешность (Δh1) для D1</td>
+                <td style="text-align: left;">= <span id="valDh1" class="calc-res">-</span> мм</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Теоретическая погрешность (Δh2) для D2</td>
+                <td style="text-align: left;">= <span id="valDh2" class="calc-res">-</span> мм</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Суммарная теор. погрешность (ΔA теор)</td>
+                <td style="text-align: left;">= <span id="valDhSum" class="calc-res">-</span> мм</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Экспериментальная разность (ΔA эксп = |A'' - A'|)</td>
+                <td style="text-align: left;">= <span id="valDiffA" class="calc-res">-</span> мм</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Проверка условия (ΔA эксп < ΔA теор)</td>
+                <td style="text-align: left;"><span id="finalCheck">-</span></td>
+            </tr>
+        </table>
+    </div>
+
+    <button class="btn-print" onclick="window.print()">🖨 Распечатать отчет</button>
+
+</div>
+
+<script>
+    // Утилиты
+    function round(num, decimals = 2) {
+        if (num === "" || num === null || isNaN(num)) return null;
+        return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    }
+
+    // 1. Характеристики
+    const rangeInput = document.getElementById('rangeInput');
+    const precisionInput = document.getElementById('precisionInput');
+    const outRange = document.getElementById('outRange');
+    const outPrecision = document.getElementById('outPrecision');
+    const tolVals = document.querySelectorAll('.tol-val');
+
+    function updateSpecs() {
+        outRange.textContent = rangeInput.value;
+        outPrecision.textContent = precisionInput.value;
+        const tol = precisionInput.value; 
+        tolVals.forEach(el => el.textContent = tol);
+        updateVerification(); // пересчитать поверку, т.к. допуск изменился
+    }
+
+    rangeInput.addEventListener('input', updateSpecs);
+    precisionInput.addEventListener('input', updateSpecs);
+
+    // 2. Поверка
+    const verifyTable = document.getElementById('verifyTable');
+    
+    function updateVerification() {
+        const rows = verifyTable.querySelectorAll('tr');
+        const tolerance = parseFloat(precisionInput.value) || 0.1;
+
+        rows.forEach(row => {
+            const mInput = row.querySelector('.verify-m');
+            const mrInput = row.querySelector('.verify-mr');
+            const diffSpan = row.querySelector('.verify-diff');
+            const resSpan = row.querySelector('.verify-res');
+
+            const m = parseFloat(mInput.value);
+            const mr = parseFloat(mrInput.value);
+
+            if (!isNaN(m) && !isNaN(mr)) {
+                const diff = round(mr - m, 2);
+                diffSpan.textContent = diff;
+                
+                if (Math.abs(diff) <= tolerance) {
+                    resSpan.textContent = "Соотв.";
+                    resSpan.className = "verify-res pass";
+                } else {
+                    resSpan.textContent = "Не соотв.";
+                    resSpan.className = "verify-res fail";
+                }
+            } else {
+                diffSpan.textContent = "-";
+                resSpan.textContent = "-";
+                resSpan.className = "verify-res";
+            }
+        });
+    }
+
+    verifyTable.addEventListener('input', updateVerification);
+
+    // 3. Измерения и 4. Анализ
+    const measInputs = document.querySelectorAll('.meas-zr');
+    const tzInput = document.getElementById('tzInput');
+    const outTZ = document.getElementById('outTZ');
+    
+    // Элементы для расчета А
+    const inpD1 = document.getElementById('inpD1');
+    const inpD2 = document.getElementById('inpD2');
+    const inpF = document.getElementById('inpF');
+    const inpG = document.getElementById('inpG');
+    const outA1 = document.getElementById('outA1');
+    const outA2 = document.getElementById('outA2');
+
+    // Элементы для анализа
+    const valDh1 = document.getElementById('valDh1');
+    const valDh2 = document.getElementById('valDh2');
+    const valDhSum = document.getElementById('valDhSum');
+    const valDiffA = document.getElementById('valDiffA');
+    const finalCheck = document.getElementById('finalCheck');
+
+    const B_JAW = 3.5; // Толщина губок из методички
+
+    function calculateTheoreticalError(diameter) {
+        if (!diameter) return 0;
+        const R = diameter / 2;
+        // Формула: dh = R - sqrt(R^2 - b^2/4)
+        const inner = (R * R) - ((B_JAW * B_JAW) / 4);
+        if (inner < 0) return 0; // Если отверстие слишком маленькое для губок
+        return R - Math.sqrt(inner);
+    }
+
+    function updateMeasurements() {
+        const tz = parseFloat(tzInput.value) || 0.052;
+        outTZ.textContent = tz;
+
+        // Обновляем таблицу измерений
+        measInputs.forEach(input => {
+            const row = input.closest('tr');
+            const zSpan = row.querySelector('.meas-z');
+            const diffSpan = row.querySelector('.meas-diff');
+            const resSpan = row.querySelector('.meas-res');
+
+            const zr = parseFloat(input.value);
+
+            if (!isNaN(zr)) {
+                const z = Math.round(zr); // Номинал - ближайшее целое
+                zSpan.textContent = z;
+                
+                const diff = round(zr - z, 3);
+                diffSpan.textContent = diff;
+
+                if (Math.abs(diff) <= tz) {
+                    resSpan.textContent = "Годен";
+                    resSpan.className = "meas-res pass";
+                } else {
+                    resSpan.textContent = "Брак";
+                    resSpan.className = "meas-res fail";
+                }
+            } else {
+                zSpan.textContent = "-";
+                diffSpan.textContent = "-";
+                resSpan.textContent = "-";
+                resSpan.className = "meas-res";
+            }
+        });
+
+        // Расчет А и Анализ
+        const d1 = parseFloat(inpD1.value);
+        const d2 = parseFloat(inpD2.value);
+        const f = parseFloat(inpF.value);
+        const g = parseFloat(inpG.value);
+
+        if (!isNaN(d1) && !isNaN(d2) && !isNaN(f) && !isNaN(g)) {
+            // Расчет А
+            const a1 = f - (d1 + d2) / 2;
+            const a2 = g + (d1 + d2) / 2;
+            
+            outA1.textContent = round(a1, 3);
+            outA2.textContent = round(a2, 3);
+
+            // Анализ
+            const dh1 = calculateTheoreticalError(d1);
+            const dh2 = calculateTheoreticalError(d2);
+            const dhSum = dh1 + dh2;
+            const diffExp = Math.abs(a2 - a1);
+
+            valDh1.textContent = round(dh1, 4);
+            valDh2.textContent = round(dh2, 4);
+            valDhSum.textContent = round(dhSum, 4);
+            valDiffA.textContent = round(diffExp, 4);
+
+            if (diffExp < dhSum) {
+                finalCheck.textContent = "Выполняется (ОК)";
+                finalCheck.className = "pass";
+            } else {
+                finalCheck.textContent = "Не выполняется (Ошибка измерений)";
+                finalCheck.className = "fail";
+            }
+
+        } else {
+            outA1.textContent = "-";
+            outA2.textContent = "-";
+            valDh1.textContent = "-";
+            valDh2.textContent = "-";
+            valDhSum.textContent = "-";
+            valDiffA.textContent = "-";
+            finalCheck.textContent = "-";
+            finalCheck.className = "";
+        }
+    }
+
+    document.getElementById('measureTable').addEventListener('input', updateMeasurements);
+    tzInput.addEventListener('input', updateMeasurements);
+
+    // Инициализация при загрузке
+    updateSpecs();
+    updateVerification();
+    updateMeasurements();
+
+</script>
+
+</body>
+</html>
